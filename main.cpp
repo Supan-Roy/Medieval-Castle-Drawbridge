@@ -538,10 +538,10 @@ static void updateBridgeStateMachine(float dt)
     if (t_scale > 1.0f) t_scale = 1.0f;
     float shipScale = 1.0f - t_scale * 0.8f;
     if (sim.shipY > -5.0f) {
-        float t_inside = (sim.shipY - (-5.0f)) / (10.0f - (-5.0f));
-        shipScale = 0.2f - t_inside * 0.08f;
+        float t_inside = (sim.shipY - (-5.0f)) / (15.0f - (-5.0f));
+        shipScale = 0.2f - t_inside * 0.19f;
     }
-    if (shipScale < 0.12f) shipScale = 0.12f;
+    if (shipScale < 0.01f) shipScale = 0.01f;
 
     float shipFront = sim.shipY + 5.0f * shipScale;
     float shipRear  = sim.shipY - 20.0f * shipScale;
@@ -1171,7 +1171,7 @@ void drawRiver(const Theme* theme)
 
     // --- base water (canal) ---
     glColor3fv(theme->river);
-    float canalVerts[8] = { -30.0f, -60.0f, 30.0f, -60.0f, 9.0f, -5.0f, -9.0f, -5.0f };
+    float canalVerts[8] = { -64.0f, -150.0f, 64.0f, -150.0f, 9.0f, -5.0f, -9.0f, -5.0f };
     drawPolygon(canalVerts, 4);
 
     // --- animated perspective ripples ---
@@ -1181,8 +1181,8 @@ void drawRiver(const Theme* theme)
     for (j = 0; j < 6; j++)
     {
         float v = (float)j / 5.0f;
-        float ry_center = -55.0f + v * 48.0f;
-        float W_y = 30.0f - v * 21.0f; // half-width of the canal at this depth
+        float ry_center = -140.0f + v * 133.0f;
+        float W_y = 60.0f - v * 51.0f; // half-width of the canal at this depth
         
         glColor4f(0.25f, 0.40f, 0.75f, 0.6f);
         glLineWidth(1.5f);
@@ -1297,11 +1297,11 @@ void drawScene(const Theme* theme)
     // ---- 1. sky gradient (top color -> bottom color) ----
     glBegin(GL_QUADS);
         glColor3fv(theme->skyTop);
-        glVertex2f(WORLD_LEFT, WORLD_TOP);
-        glVertex2f(WORLD_RIGHT, WORLD_TOP);
+        glVertex2f(WORLD_LEFT, 150.0f);
+        glVertex2f(WORLD_RIGHT, 150.0f);
         glColor3fv(theme->skyBottom);
-        glVertex2f(WORLD_RIGHT, WORLD_BOTTOM);
-        glVertex2f(WORLD_LEFT, WORLD_BOTTOM);
+        glVertex2f(WORLD_RIGHT, -150.0f);
+        glVertex2f(WORLD_LEFT, -150.0f);
     glEnd();
 
     // ---- 2. stars (night) + sun / moon ----
@@ -1333,22 +1333,22 @@ void drawScene(const Theme* theme)
         drawCloud( fmodf(c + 160.0f, 260.0f) - 130.0f,  44.0f, 1.2f);
     }
 
-    // ---- 4. ground (perspective banks) ----
+    // ---- 4. ground (perspective banks extended to -150.0f to avoid aspect gaps) ----
     glColor3fv(theme->ground);
     // Left bank
-    float leftBank[8] = { WORLD_LEFT, -60.0f, -30.0f, -60.0f, -9.0f, -5.0f, WORLD_LEFT, -5.0f };
+    float leftBank[8] = { WORLD_LEFT, -150.0f, -64.0f, -150.0f, -9.0f, -5.0f, WORLD_LEFT, -5.0f };
     drawPolygon(leftBank, 4);
     // Right bank
-    float rightBank[8] = { WORLD_RIGHT, -60.0f, 30.0f, -60.0f, 9.0f, -5.0f, WORLD_RIGHT, -5.0f };
+    float rightBank[8] = { WORLD_RIGHT, -150.0f, 64.0f, -150.0f, 9.0f, -5.0f, WORLD_RIGHT, -5.0f };
     drawPolygon(rightBank, 4);
     // Distant background ground strip
     drawRect(WORLD_LEFT, -5.0f, WORLD_RIGHT, 0.0f);
 
     // Lighter grass borders along the river canal
     glColor3f(0.42f, 0.72f, 0.35f);
-    float leftBorder[8] = { -30.0f, -60.0f, -28.0f, -60.0f, -8.0f, -5.0f, -9.0f, -5.0f };
+    float leftBorder[8] = { -64.0f, -150.0f, -60.0f, -150.0f, -8.0f, -5.0f, -9.0f, -5.0f };
     drawPolygon(leftBorder, 4);
-    float rightBorder[8] = { 30.0f, -60.0f, 28.0f, -60.0f, 8.0f, -5.0f, 9.0f, -5.0f };
+    float rightBorder[8] = { 64.0f, -150.0f, 60.0f, -150.0f, 8.0f, -5.0f, 9.0f, -5.0f };
     drawPolygon(rightBorder, 4);
 
     // (Trees removed from here to be drawn on top of the castle walls in display)
@@ -1425,11 +1425,11 @@ void drawShip(const Theme* theme)
     float shipScale = 1.0f - t * 0.8f;
     if (sim.shipY > -5.0f)
     {
-        // Continue to shrink slightly inside the gateway
-        float t_inside = (sim.shipY - (-5.0f)) / (10.0f - (-5.0f));
-        shipScale = 0.2f - t_inside * 0.08f;
+        // Continue to shrink inside the gateway towards the vanishing point
+        float t_inside = (sim.shipY - (-5.0f)) / (15.0f - (-5.0f));
+        shipScale = 0.2f - t_inside * 0.19f;
     }
-    if (shipScale < 0.12f) shipScale = 0.12f;
+    if (shipScale < 0.01f) shipScale = 0.01f;
 
     // Apply main translation and perspective scale
     glTranslatef(shipX, sim.shipY, 0.0f);
@@ -1513,8 +1513,8 @@ void drawShip(const Theme* theme)
         float x = 1.5f + t * 8.0f;
         // Waving offset based on traveling sine wave
         float wave = 0.8f * t * sinf(sim.flagPhase * 3.0f - t * 5.0f);
-        float y_top = (35.0f * (1.0f - t) + 33.5f * t) + wave;
-        float y_bottom = (32.0f * (1.0f - t) + 33.5f * t) + wave;
+        float y_top = (32.0f * (1.0f - t) + 30.75f * t) + wave;
+        float y_bottom = (29.5f * (1.0f - t) + 30.75f * t) + wave;
 
         glVertex2f(x, y_top);
         glVertex2f(x, y_bottom);
@@ -1891,7 +1891,7 @@ void reshape(int w, int h)
 // ---------------------------------------------------------------
 static void initGL(void)
 {
-    glClearColor(0.45f, 0.72f, 1.0f, 1.0f);   // day-sky blue (overwritten by scene)
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);   // black letterbox margins
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 }
