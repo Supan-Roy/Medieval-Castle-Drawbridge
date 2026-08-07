@@ -114,6 +114,10 @@ typedef struct SimState
     // --- global animation control ---
     float speed;          // speed multiplier (SPEED_MIN..SPEED_MAX)
     int   paused;         // 1 = paused, 0 = running
+
+    // --- graphics concepts demonstration ---
+    int   mirrorMode;     // 1 = reflected horizontally, 0 = normal
+    int   showDemoMode;   // 1 = draw F1 Concepts Demo Overlay, 0 = normal
 } SimState;
 
 // The one global state object (defined in Animation section).
@@ -344,6 +348,105 @@ void drawEllipse(float cx, float cy, float rx, float ry, int segments)
     glEnd();
 }
 
+// ---------------------------------------------------------------
+// Midpoint Circle & Bresenham Line Algorithms
+// ---------------------------------------------------------------
+
+// Helper to draw circle points for symmetry
+static void drawCircleMidpointPoints(float cx, float cy, float fx, float fy, bool filled)
+{
+    if (filled)
+    {
+        glBegin(GL_LINES);
+        glVertex2f(cx - fx, cy + fy); glVertex2f(cx + fx, cy + fy);
+        glVertex2f(cx - fx, cy - fy); glVertex2f(cx + fx, cy - fy);
+        glVertex2f(cx - fy, cy + fx); glVertex2f(cx + fy, cy + fx);
+        glVertex2f(cx - fy, cy - fx); glVertex2f(cx + fy, cy - fx);
+        glEnd();
+    }
+    else
+    {
+        glBegin(GL_POINTS);
+        glVertex2f(cx + fx, cy + fy);
+        glVertex2f(cx - fx, cy + fy);
+        glVertex2f(cx + fx, cy - fy);
+        glVertex2f(cx - fx, cy - fy);
+        glVertex2f(cx + fy, cy + fx);
+        glVertex2f(cx - fy, cy + fx);
+        glVertex2f(cx + fy, cy - fx);
+        glVertex2f(cx - fy, cy - fx);
+        glEnd();
+    }
+}
+
+// Draws a circle using the Midpoint Circle Algorithm (custom rasterization)
+static void drawCircleMidpoint(float cx, float cy, float r, bool filled)
+{
+    int r_int = (int)(r * 50.0f);
+    if (r_int < 1) r_int = 1;
+    float scale = 1.0f / 50.0f;
+
+    int x = 0;
+    int y = r_int;
+    int p = 1 - r_int;
+
+    drawCircleMidpointPoints(cx, cy, x * scale, y * scale, filled);
+
+    while (x < y)
+    {
+        x++;
+        if (p < 0)
+        {
+            p += 2 * x + 1;
+        }
+        else
+        {
+            y--;
+            p += 2 * (x - y) + 1;
+        }
+        drawCircleMidpointPoints(cx, cy, x * scale, y * scale, filled);
+    }
+}
+
+// Draws a line using Bresenham's Line Algorithm (custom rasterization)
+static void drawLineBresenham(float x1, float y1, float x2, float y2)
+{
+    int x1_i = (int)(x1 * 50.0f);
+    int y1_i = (int)(y1 * 50.0f);
+    int x2_i = (int)(x2 * 50.0f);
+    int y2_i = (int)(y2 * 50.0f);
+
+    int dx = abs(x2_i - x1_i);
+    int dy = abs(y2_i - y1_i);
+    int sx = (x1_i < x2_i) ? 1 : -1;
+    int sy = (y1_i < y2_i) ? 1 : -1;
+    int err = dx - dy;
+
+    float scale = 1.0f / 50.0f;
+
+    glBegin(GL_POINTS);
+    while (true)
+    {
+        glVertex2f(x1_i * scale, y1_i * scale);
+
+        if (x1_i == x2_i && y1_i == y2_i)
+            break;
+
+        int e2 = 2 * err;
+        if (e2 > -dy)
+        {
+            err -= dy;
+            x1_i += sx;
+        }
+        if (e2 < dx)
+        {
+            err += dx;
+            y1_i += sy;
+        }
+    }
+    glEnd();
+}
+
 // ============================================================================
 // Section: Animation & FSM Controller
 // The animation update loop: a finite state machine for the bridge/ship
@@ -406,6 +509,9 @@ void initSim(void)
 
     sim.speed       = 1.0f;
     sim.paused      = 0;
+
+    sim.mirrorMode   = 0;
+    sim.showDemoMode = 0;
 }
 
 // ---------------------------------------------------------------
@@ -684,16 +790,13 @@ static void drawChainLine(float x0, float y0, float x1, float y1)
     float dy = y1 - y0;
     float len = sqrtf(dx * dx + dy * dy);
     
-    // Draw the main iron wire
+    // Draw the main iron wire using Bresenham's Line Algorithm
     glColor3f(0.30f, 0.30f, 0.32f);
-    glLineWidth(2.5f);
-    glBegin(GL_LINES);
-    glVertex2f(x0, y0);
-    glVertex2f(x1, y1);
-    glEnd();
-    glLineWidth(1.0f);
+    glPointSize(3.0f);
+    drawLineBresenham(x0, y0, x1, y1);
+    glPointSize(1.0f);
     
-    // Draw overlapping oval links
+    // Draw overlapping oval links using the Midpoint Circle Algorithm
     int numLinks = (int)(len / 2.5f);
     if (numLinks < 3) numLinks = 3;
     for (i = 0; i <= numLinks; i++)
@@ -703,9 +806,9 @@ static void drawChainLine(float x0, float y0, float x1, float y1)
         float ly = y0 + t * dy;
         
         glColor3f(0.20f, 0.20f, 0.22f);
-        drawCircle(lx, ly, 0.8f, 8);
+        drawCircleMidpoint(lx, ly, 0.8f, true);
         glColor3f(0.40f, 0.40f, 0.42f);
-        drawCircle(lx, ly, 0.4f, 8);
+        drawCircleMidpoint(lx, ly, 0.4f, true);
     }
 }
 
@@ -761,12 +864,9 @@ void drawBridge(const Theme* theme)
         float verts[8] = { ax, ay, bx, by, cx, cy, dx, dy };
         drawPolygon(verts, 4);
         
-        // Draw plank separator lines
+        // Draw plank separator lines using Bresenham's Line Algorithm
         glColor3f(0.25f, 0.15f, 0.05f);
-        glBegin(GL_LINES);
-        glVertex2f(ax, ay);
-        glVertex2f(bx, by);
-        glEnd();
+        drawLineBresenham(ax, ay, bx, by);
     }
 
     // --- 4. Deck Front Lip (solid thickness face at the outer end) ---
@@ -862,9 +962,11 @@ static void drawTowerTop(float cx, float baseY, float halfW, float roofH,
 
     if (hasFlag)
     {
-        // --- flagpole (thin vertical rect) ---
+        // --- flagpole (drawn using Bresenham Line Algorithm) ---
         glColor3f(0.35f, 0.3f, 0.25f);
-        drawRect(cx - 0.7f, baseY + roofH, cx + 0.7f, baseY + roofH + 9.0f);
+        glPointSize(2.0f);
+        drawLineBresenham(cx, baseY + roofH, cx, baseY + roofH + 9.0f);
+        glPointSize(1.0f);
 
         // --- flag: waving cloth beside the pole top ---
         glPushMatrix();
@@ -997,6 +1099,14 @@ void drawCastleForeground(const Theme* theme)
     glColor3fv(theme->castle);
     drawRect(-9.0f, 12.0f, 9.0f, 18.0f);
     drawBattlements(-7.0f, 7.0f, 18.0f, 3.0f, 3.0f);
+
+    // Decorative shield in the center of the arch (rendered with Midpoint Circle Algorithm)
+    glColor3f(0.85f, 0.70f, 0.20f); // gold trim
+    drawCircleMidpoint(0.0f, 15.0f, 2.5f, true);
+    glColor3f(0.80f, 0.15f, 0.10f); // red center
+    drawCircleMidpoint(0.0f, 15.0f, 1.8f, true);
+    glColor3f(0.85f, 0.70f, 0.20f); // gold inner ring
+    drawCircleMidpoint(0.0f, 15.0f, 1.0f, false);
 
     // ---- small windows on both towers (glow at night) ----
     float wColor[3];
@@ -1208,9 +1318,9 @@ void drawScene(const Theme* theme)
     }
 
     // sun (day/sunset) or moon (night): same position, different color,
-    // demonstrating COLOR MANIPULATION.
+    // demonstrating COLOR MANIPULATION (using Midpoint Circle Algorithm).
     glColor3fv(theme->sun);
-    drawCircle(60.0f, 45.0f, 8.0f, 24);
+    drawCircleMidpoint(60.0f, 45.0f, 8.0f, true);
 
     // ---- 3. clouds (drifting) ----
     // cloudOffset advances in the animation section; wrapping keeps them in
@@ -1324,6 +1434,12 @@ void drawShip(const Theme* theme)
     // Apply main translation and perspective scale
     glTranslatef(shipX, sim.shipY, 0.0f);
     glScalef(shipScale, shipScale, 1.0f);
+
+    // 2D Reflection - Horizontal Mirror Mode (demonstrating reflection)
+    if (sim.mirrorMode)
+    {
+        glScalef(-1.0f, 1.0f, 1.0f);
+    }
 
     // Gentle bobbing on the water (rotation about local bottom center)
     glTranslatef(0.0f, -10.0f, 0.0f);
@@ -1495,6 +1611,12 @@ static void keyboard(unsigned char key, int x, int y)
         sim.themeBlend = 0.001f;   // tiny non-zero -> blend begins
         break;
 
+    case 'm':
+    case 'M':
+        sim.mirrorMode = !sim.mirrorMode;
+        glutPostRedisplay();
+        break;
+
     case 'z':
     case 'Z':
         zoomToBridge();
@@ -1529,7 +1651,12 @@ static void keyboard(unsigned char key, int x, int y)
 // ---------------------------------------------------------------
 static void specialKeys(int key, int x, int y)
 {
-    (void)key; (void)x; (void)y;   // unused
+    (void)x; (void)y;
+    if (key == GLUT_KEY_F1)
+    {
+        sim.showDemoMode = !sim.showDemoMode;
+        glutPostRedisplay();
+    }
 }
 
 // ---------------------------------------------------------------
@@ -1596,6 +1723,92 @@ static void setupProjection(void)
 }
 
 // ---------------------------------------------------------------
+// Helper to render text on the HUD/Overlay
+// ---------------------------------------------------------------
+static void renderOverlayString(float x, float y, const char* text, float r, float g, float b)
+{
+    glColor3f(r, g, b);
+    glRasterPos2f(x, y);
+    for (int i = 0; text[i]; i++)
+        glutBitmapCharacter(GLUT_BITMAP_9_BY_15, text[i]);
+}
+
+// ---------------------------------------------------------------
+// Helper to draw the F1 Computer Graphics Concepts Demonstration Overlay
+// ---------------------------------------------------------------
+static void drawDemoOverlay(void)
+{
+    // Switch to HUD ortho coordinate system (pixel coordinates)
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0, currentWinW, 0, currentWinH);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    // Semi-transparent black background
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glColor4f(0.0f, 0.0f, 0.0f, 0.78f);
+    drawRect(50.0f, 50.0f, (float)currentWinW - 50.0f, (float)currentWinH - 50.0f);
+    glDisable(GL_BLEND);
+
+    // Border outline (Gold)
+    glColor3f(0.85f, 0.70f, 0.20f);
+    glLineWidth(2.0f);
+    glBegin(GL_LINE_LOOP);
+    glVertex2f(50.0f, 50.0f);
+    glVertex2f((float)currentWinW - 50.0f, 50.0f);
+    glVertex2f((float)currentWinW - 50.0f, (float)currentWinH - 50.0f);
+    glVertex2f(50.0f, (float)currentWinH - 50.0f);
+    glEnd();
+    glLineWidth(1.0f);
+
+    // Title and Concepts List
+    float startY = (float)currentWinH - 100.0f;
+    float stepY = 28.0f;
+    int lineIndex = 0;
+
+    renderOverlayString(80.0f, startY - (lineIndex++) * stepY, "=== COMPUTER GRAPHICS CONCEPTS DEMONSTRATED ===", 0.9f, 0.7f, 0.1f);
+    lineIndex++; // spacer
+
+    renderOverlayString(80.0f, startY - (lineIndex++) * stepY, "[X] 2D Primitive Assembly (Quads, Triangles, Polygons, Lines)", 1.0f, 1.0f, 1.0f);
+    renderOverlayString(80.0f, startY - (lineIndex++) * stepY, "[X] Affine Transformations: 2D Translation (Ship, Clouds, Birds)", 1.0f, 1.0f, 1.0f);
+    renderOverlayString(80.0f, startY - (lineIndex++) * stepY, "[X] Affine Transformations: 2D Rotation (Drawbridge, Bobbing Hull, Flags)", 1.0f, 1.0f, 1.0f);
+    renderOverlayString(80.0f, startY - (lineIndex++) * stepY, "[X] Affine Transformations: 2D Perspective Scaling (Ship depth shrink)", 1.0f, 1.0f, 1.0f);
+    
+    char mirrorBuf[80];
+    snprintf(mirrorBuf, sizeof(mirrorBuf), "[%s] 2D Reflection - Horizontal Mirror Mode (Press M to Toggle)",
+             sim.mirrorMode ? "X" : " ");
+    renderOverlayString(80.0f, startY - (lineIndex++) * stepY, mirrorBuf, 
+                        sim.mirrorMode ? 0.2f : 1.0f, sim.mirrorMode ? 1.0f : 1.0f, sim.mirrorMode ? 0.2f : 1.0f);
+
+    renderOverlayString(80.0f, startY - (lineIndex++) * stepY, "[X] Midpoint Circle Algorithm (Sun, Moon, Castle Shield Emblem)", 1.0f, 1.0f, 1.0f);
+    renderOverlayString(80.0f, startY - (lineIndex++) * stepY, "[X] Bresenham's Line Algorithm (Chains, Tower Flagpoles, Plank Joints)", 1.0f, 1.0f, 1.0f);
+    renderOverlayString(80.0f, startY - (lineIndex++) * stepY, "[X] Finite State Machine (FSM) Animation (8-state sequence loop)", 1.0f, 1.0f, 1.0f);
+    
+    char zoomBuf[80];
+    snprintf(zoomBuf, sizeof(zoomBuf), "[%s] Window-to-Viewport Zoom (Press Z/X to Toggle)",
+             sim.zoomFactor > 1.0f ? "X" : " ");
+    renderOverlayString(80.0f, startY - (lineIndex++) * stepY, zoomBuf, 
+                        sim.zoomFactor > 1.0f ? 0.2f : 1.0f, sim.zoomFactor > 1.0f ? 1.0f : 1.0f, sim.zoomFactor > 1.0f ? 0.2f : 1.0f);
+
+    renderOverlayString(80.0f, startY - (lineIndex++) * stepY, "[X] Color Interpolation Themes (Press D to cycle Day / Sunset / Night)", 1.0f, 1.0f, 1.0f);
+    renderOverlayString(80.0f, startY - (lineIndex++) * stepY, "[X] Dynamic Depth Sorting & Vanishing Occlusion (Painter's Algorithm)", 1.0f, 1.0f, 1.0f);
+    renderOverlayString(80.0f, startY - (lineIndex++) * stepY, "[X] Procedural Wave & Waving Cloth Physics (Chains & Flags)", 1.0f, 1.0f, 1.0f);
+    
+    lineIndex++; // spacer
+    renderOverlayString(80.0f, startY - (lineIndex++) * stepY, "Press F1 again to exit concepts overlay.", 0.6f, 0.6f, 0.6f);
+
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+}
+
+// ---------------------------------------------------------------
 // Display: draw the whole scene for the current state
 // ---------------------------------------------------------------
 void display(void)
@@ -1643,6 +1856,12 @@ void display(void)
 
     // ---- HUD (bridge state, speed, theme, zoom) ----
     drawHUD();
+
+    // ---- F1 Concepts Demo Overlay ----
+    if (sim.showDemoMode)
+    {
+        drawDemoOverlay();
+    }
 
     glutSwapBuffers();
 }

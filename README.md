@@ -22,6 +22,10 @@ This simulation models a medieval castle with a navigable river channel flowing 
 | **Translation & Rotation** | Ship sailing (`shipY`), clouds drifting (`cloudOffset`), birds gliding, smoke puffs rising, and flag waving. |
 | **Color themes** | `D` key cycles **Day → Sunset → Night** with smooth color blending of sky, river, castle, and window glows. |
 | **Window → Viewport** | `Z` zooms into the bridge, `X` returns — implemented by changing the ortho world window while keeping the pixel viewport aligned to the window. |
+| **Midpoint Circle Algorithm** | Custom rasterization function used to draw the Sun, Moon, and the castle decorative shield. |
+| **Bresenham's Line Algorithm** | Custom integer line algorithm used to draw the drawbridge chains, tower flagpoles, and wood plank joints. |
+| **2D Reflection** | Horizontal Mirror Mode (`M` key) reflects the entire ship model horizontally across the vertical axis. |
+| **Concepts Overlay HUD** | Interactive overlay (`F1` key) lists all CG course concepts with live status checkmarks. |
 
 ---
 
@@ -32,8 +36,10 @@ This simulation models a medieval castle with a navigable river channel flowing 
 | `Space` | Pause / resume |
 | `R` / `r` | Reset animation to initial state |
 | `D` / `d` | Cycle Day → Sunset → Night → Day (smooth blend) |
+| `M` / `m` | Toggle Horizontal Mirror Mode (2D Reflection) |
 | `Z` / `z` | Zoom into the bridge (viewport transform) |
 | `X` / `x` | Reset to full scene |
+| `F1` | Toggle CG Concepts Demonstration Overlay |
 | `+` / `=` | Increase animation speed |
 | `-` / `_` | Decrease animation speed |
 
