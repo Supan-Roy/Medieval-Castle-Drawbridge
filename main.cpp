@@ -1435,11 +1435,7 @@ void drawShip(const Theme* theme)
     glTranslatef(shipX, sim.shipY, 0.0f);
     glScalef(shipScale, shipScale, 1.0f);
 
-    // 2D Reflection - Horizontal Mirror Mode (demonstrating reflection)
-    if (sim.mirrorMode)
-    {
-        glScalef(-1.0f, 1.0f, 1.0f);
-    }
+
 
     // Gentle bobbing on the water (rotation about local bottom center)
     glTranslatef(0.0f, -10.0f, 0.0f);
@@ -1824,6 +1820,12 @@ void display(void)
     glClear(GL_COLOR_BUFFER_BIT);
 
     glPushMatrix();
+
+    // 2D Reflection - Horizontal Mirror Mode (mirrors the entire coordinate system)
+    if (sim.mirrorMode)
+    {
+        glScalef(-1.0f, 1.0f, 1.0f);
+    }
 
     // ---- environment (sky, stars, sun/moon, clouds, ground, trees, birds) ----
     drawScene(&theme);
