@@ -81,7 +81,7 @@ typedef enum BridgeState
 } BridgeState;
 
 // --- theme transition ---
-#define THEME_TRANSITION_TIME 1200.0f   // ms for a full day->night blend
+#define THEME_TRANSITION_TIME 1.5f   // seconds for a full theme blend
 
 // ---------------------------------------------------------------
 // Simulation state (the only global struct in the project)
