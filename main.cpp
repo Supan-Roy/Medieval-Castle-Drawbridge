@@ -1775,20 +1775,14 @@ static void drawDemoOverlay(void)
     renderOverlayString(80.0f, startY - (lineIndex++) * stepY, "[X] Affine Transformations: 2D Rotation (Drawbridge, Bobbing Hull, Flags)", 1.0f, 1.0f, 1.0f);
     renderOverlayString(80.0f, startY - (lineIndex++) * stepY, "[X] Affine Transformations: 2D Perspective Scaling (Ship depth shrink)", 1.0f, 1.0f, 1.0f);
     
-    char mirrorBuf[80];
-    snprintf(mirrorBuf, sizeof(mirrorBuf), "[%s] 2D Reflection - Horizontal Mirror Mode (Press M to Toggle)",
-             sim.mirrorMode ? "X" : " ");
-    renderOverlayString(80.0f, startY - (lineIndex++) * stepY, mirrorBuf, 
+    renderOverlayString(80.0f, startY - (lineIndex++) * stepY, "[X] 2D Reflection - Horizontal Mirror Mode (Press M to Toggle)",
                         sim.mirrorMode ? 0.2f : 1.0f, sim.mirrorMode ? 1.0f : 1.0f, sim.mirrorMode ? 0.2f : 1.0f);
 
     renderOverlayString(80.0f, startY - (lineIndex++) * stepY, "[X] Midpoint Circle Algorithm (Sun, Moon, Castle Shield Emblem)", 1.0f, 1.0f, 1.0f);
     renderOverlayString(80.0f, startY - (lineIndex++) * stepY, "[X] Bresenham's Line Algorithm (Chains, Tower Flagpoles, Plank Joints)", 1.0f, 1.0f, 1.0f);
     renderOverlayString(80.0f, startY - (lineIndex++) * stepY, "[X] Finite State Machine (FSM) Animation (8-state sequence loop)", 1.0f, 1.0f, 1.0f);
     
-    char zoomBuf[80];
-    snprintf(zoomBuf, sizeof(zoomBuf), "[%s] Window-to-Viewport Zoom (Press Z/X to Toggle)",
-             sim.zoomFactor > 1.0f ? "X" : " ");
-    renderOverlayString(80.0f, startY - (lineIndex++) * stepY, zoomBuf, 
+    renderOverlayString(80.0f, startY - (lineIndex++) * stepY, "[X] Window-to-Viewport Zoom (Press Z/X to Toggle)",
                         sim.zoomFactor > 1.0f ? 0.2f : 1.0f, sim.zoomFactor > 1.0f ? 1.0f : 1.0f, sim.zoomFactor > 1.0f ? 0.2f : 1.0f);
 
     renderOverlayString(80.0f, startY - (lineIndex++) * stepY, "[X] Color Interpolation Themes (Press D to cycle Day / Sunset / Night)", 1.0f, 1.0f, 1.0f);
