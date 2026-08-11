@@ -1,11 +1,6 @@
 // ============================================================================
 // Smart Medieval Castle Drawbridge Simulation
 // CSE412 - Computer Graphics Lab Project
-//
-// The entire project has been consolidated into this single file.
-// The code features clear logical sections. The ANIMATION SEPARATION course
-// requirement holds: animationUpdate() advances state, and display() only READS
-// state and draws it.
 // ============================================================================
 
 #include <windows.h>    // GLUT on Windows needs this first
@@ -16,8 +11,8 @@
 // ---------------------------------------------------------------
 // Window / viewport configuration
 // ---------------------------------------------------------------
-#define WIN_W 900          // window width  (pixels)
-#define WIN_H 600          // window height (pixels)
+#define WIN_W 900          // window width  
+#define WIN_H 600          // window height
 
 static int currentWinW = WIN_W;
 static int currentWinH = WIN_H;
