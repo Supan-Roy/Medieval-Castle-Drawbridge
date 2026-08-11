@@ -25,22 +25,8 @@ static int currentWinH = WIN_H;
 #define WORLD_TOP      60.0f
 
 // ---------------------------------------------------------------
-// Drawbridge geometry
+// Drawbridge limits
 // ---------------------------------------------------------------
-// The bridge is hinged on the LEFT castle wall and, when closed, spans
-// the river to rest on the RIGHT castle wall -- a real medieval drawbridge.
-//
-//   hinge (-40,-4)  +----------------- deck 80 long ----------------+
-//   left tower       bridge from x=-40 (hinge) to x=+40 (free end)   right tower
-//   ====H=============== bridge ================T====   (closed road)
-//   ~~~~~~~~~~~~~~~~~~~~~~~~ river ~~~~~~~~~~~~~~~~~~~~~~~~~~
-//
-// The hinge is FIXED in world coordinates; the deck rotates only about it.
-#define BRIDGE_HINGE_X  -40.0f   // hinge x: on the left tower's wall face
-#define BRIDGE_HINGE_Y   -4.0f   // hinge y: deck bottom corner at river level
-#define BRIDGE_LEN       80.0f   // deck length: hinge (-40) .. free end (+40)
-#define BRIDGE_TOP        0.0f   // deck top surface (the road level)
-#define BRIDGE_BOTTOM    -4.0f   // deck thickness
 #define BRIDGE_MAX_ANGLE 82.0f   // fully open angle (degrees), pulls closer to gallows stand
 
 // ---------------------------------------------------------------
