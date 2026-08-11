@@ -1,4 +1,4 @@
-# 🏰 Pseudo-3D Medieval Castle Drawbridge Simulation
+Medieval Castle Drawbridge Simulation
 
 A **Computer Graphics** project built with **C++ / OpenGL (GLUT)** for CSE412.
 
