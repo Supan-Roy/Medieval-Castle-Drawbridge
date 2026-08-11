@@ -46,7 +46,7 @@ static int currentWinH = WIN_H;
 #define BRIDGE_LEN       80.0f   // deck length: hinge (-40) .. free end (+40)
 #define BRIDGE_TOP        0.0f   // deck top surface (the road level)
 #define BRIDGE_BOTTOM    -4.0f   // deck thickness
-#define BRIDGE_MAX_ANGLE 70.0f   // fully open angle (degrees), 65..75 target
+#define BRIDGE_MAX_ANGLE 82.0f   // fully open angle (degrees), pulls closer to gallows stand
 
 // ---------------------------------------------------------------
 // Time

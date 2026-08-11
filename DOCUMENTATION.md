@@ -13,7 +13,7 @@ The application is built using **C++** and **OpenGL / GLUT**. It consolidates al
 ### Global Data Structures
 * **`SimState`**: The singular global state object tracks all variables:
   * `BridgeState state`: Current state inside the 8-state navigation FSM.
-  * `float bridgeAngle`: The bascule lift deck angle (range: $0.0^\circ$ to $80.0^\circ$).
+  * `float bridgeAngle`: The bascule lift deck angle (range: $0.0^\circ$ to $82.0^\circ$).
   * `float shipY`: Vertical position of the ship in world coordinates.
   * `float shipPhase`: Phase counter driving the ship's bobbing.
   * `float cloudOffset`, `birdPhase`, `flagPhase`, `wavePhase`: Phase timers driving environment animations.
@@ -177,8 +177,8 @@ The ship and drawbridge animations are synchronized through an 8-state FSM in `u
 |---|---|---|
 | **`0`** | `APPROACHING` | Ship sails forward. Bridge remains closed. |
 | **`1`** | `WAITING_FOR_BRIDGE` | Ship stops at `APPROACH_LINE` ($-28.0\text{f}$). Bridge begins opening. |
-| **`2`** | `OPENING` | Bridge deck rotates up towards $80.0^\circ$. |
-| **`3`** | `OPEN` | Bridge reaches $80.0^\circ$. Transition to ship passing. |
+| **`2`** | `OPENING` | Bridge deck rotates up towards $82.0^\circ$. |
+| **`3`** | `OPEN` | Bridge reaches $82.0^\circ$. Transition to ship passing. |
 | **`4`** | `PASSING_UNDER_BRIDGE` | Ship sails through the bridge canal. Bridge is locked open. |
 | **`5`** | `CLEARED_BRIDGE` | Ship's rear clears `CLEAR_LINE` ($-15.0\text{f}$). Bridge remains open. |
 | **`6`** | `CLOSING` | Ship Y coordinate reaches $15.0\text{f}$ (inside castle). Bridge closes. |
